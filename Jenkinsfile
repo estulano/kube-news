@@ -5,7 +5,7 @@ pipleline{
         stage('Build Docker Image'){
             steps{
                 script{
-                    dockerapp = docker.build("estulano/kube-news:${env.BUILD_ID}", 'src/Dockerfile src')
+                    dockerapp = docker.build("estulano/kube-news:${env.BUILD_ID}", './src/Dockerfile ./src')
                 }
             }
         }
@@ -21,9 +21,11 @@ pipleline{
         }
 
         stage('Deploy Kubernetes'){
+            environment = "${env.BUILD_ID}"
             steps{
                 withKubeConfig([credentialsId: 'kubeconfig']){
-                    ssh 'kubectl apply -f src/deployment.yaml'
+                    ssh 'sed -i "s/{{TAG}}/$tag_version/g" ./src/deployment.yaml'
+                    ssh 'kubectl apply -f ./src/deployment.yaml'
                 }
             }
         }
